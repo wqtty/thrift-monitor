@@ -2,7 +2,7 @@
 
 This project is a demo which demonstrates how to monitor thrift RPCs.
 
-#Usage
+# Usage
 1. run ```make``` at the root, 
 
 1. start the server by running ```./server/server```,
