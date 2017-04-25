@@ -3,11 +3,11 @@ package main
 import (
 	"log"
 
-	"github.com/wqtty/go-test/server/logic"
+	"github.com/wqtty/thrift-monitor/server/logic"
 
 	"git.apache.org/thrift.git/lib/go/thrift"
-	"github.com/wqtty/go-test/tserver"
-	"github.com/wqtty/go-test/server/processor"
+	"github.com/wqtty/thrift-monitor/tserver"
+	"github.com/wqtty/thrift-monitor/server/processor"
 )
 
 func main() {

@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"git.apache.org/thrift.git/lib/go/thrift"
-	"github.com/wqtty/go-test/tserver"
+	"github.com/wqtty/thrift-monitor/tserver"
 )
 
 const serverAddress = "127.0.0.1:7777"
