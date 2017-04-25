@@ -1,0 +1,13 @@
+# Created by .ignore support plugin (hsz.mobi)
+### Go template
+# Binaries for programs and plugins
+server/server
+client/client
+
+#intellij idea files
+.idea/
+*.iml
+
+#thrift generated files
+tserver/
+
