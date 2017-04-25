@@ -1,31 +1,36 @@
-package processor
+package interceptor
 
 import (
-	"log"
-
-	"unsafe"
-
 	"fmt"
+	"log"
 	"strings"
+	"time"
+	"unsafe"
 
 	"git.apache.org/thrift.git/lib/go/thrift"
 )
 
+//TMultiplexedProcessor is copied from thrift v0.9.3 git.apache.org/thrift.git/lib/go/thrift/multiplexed_protocol.go
 type TMultiplexedProcessor struct {
 	serviceProcessorMap map[string]thrift.TProcessor
 	DefaultProcessor    thrift.TProcessor
 }
 
-type LogProcessor struct {
-	realProcessor thrift.TProcessor
+//LogInterceptor is the interceptor that logs all RPCs invoked by thrift multiplexed processor
+//it should implements TProcessor interface defined in git.apache.org/thrift.git/lib/go/thrift/processor.go
+type LogInterceptor struct {
+	realProcessor *thrift.TMultiplexedProcessor
 }
 
-func (p *LogProcessor) RegisterProcessor(processor thrift.TProcessor) {
+//RegisterProcessor registers the multiplexed processor for later use
+func (p *LogInterceptor) RegisterProcessor(processor *thrift.TMultiplexedProcessor) {
 	p.realProcessor = processor
 }
 
-func (p *LogProcessor) Process(in, out thrift.TProtocol) (bool, thrift.TException) {
-	multiplexedProcessor := (*TMultiplexedProcessor)(unsafe.Pointer(p.realProcessor.(*thrift.TMultiplexedProcessor)))
+//Process satisfies TProcessor interface, the code below is copied from git.apache.org/thrift.git/lib/go/thrift/multiplexed_protocol.go
+//and slightly changed, i.e. add logging
+func (p *LogInterceptor) Process(in, out thrift.TProtocol) (bool, thrift.TException) {
+	multiplexedProcessor := (*TMultiplexedProcessor)(unsafe.Pointer(p.realProcessor))
 	name, typeId, seqid, err := in.ReadMessageBegin()
 	if err != nil {
 		return false, err
@@ -48,7 +53,9 @@ func (p *LogProcessor) Process(in, out thrift.TProtocol) (bool, thrift.TExceptio
 	}
 	log.Print("Got req:", v[0], ".", v[1])
 	smb := thrift.NewStoredMessageProtocol(in, v[1], typeId, seqid)
+	start := time.Now()
 	rslt, e := actualProcessor.Process(smb, out)
-	log.Print("intercepted by LogProcessor, after process")
+	end := time.Now()
+	log.Print("method:", v[0], ".", v[1], " has taken ", end.Sub(start).Nanoseconds()/time.Millisecond.Nanoseconds(), " ms")
 	return rslt, e
 }

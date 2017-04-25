@@ -6,28 +6,31 @@ import (
 	"github.com/wqtty/thrift-monitor/server/logic"
 
 	"git.apache.org/thrift.git/lib/go/thrift"
+	"github.com/wqtty/thrift-monitor/server/interceptor"
 	"github.com/wqtty/thrift-monitor/tserver"
-	"github.com/wqtty/thrift-monitor/server/processor"
 )
+
+const serverAddress = "0.0.0.0:7777"
 
 func main() {
 	transportFactory := thrift.NewTBufferedTransportFactory(1024) //for node js default
 	protocolFactory := thrift.NewTBinaryProtocolFactoryDefault()
 
 	//create socket
-	serverSocket, err := thrift.NewTServerSocket("0.0.0.0:7777")
+	serverSocket, err := thrift.NewTServerSocket(serverAddress)
 	if err != nil {
 		log.Fatal("thrift.NewTServerSocket:", err)
 	}
 	//register handler
 	multiplexedProcessor := thrift.NewTMultiplexedProcessor()
-	//order
 	handler := &logic.TServiceImpl{}
-	orderProcessor := tserver.NewTserviceProcessor(handler)
-	multiplexedProcessor.RegisterProcessor(logic.ServiceName, orderProcessor)
-	logProcessor := &processor.LogProcessor{}
-	logProcessor.RegisterProcessor(multiplexedProcessor)
-	//create server
-	server := thrift.NewTSimpleServer4(logProcessor, serverSocket, transportFactory, protocolFactory)
+	tServiceProcessor := tserver.NewTserviceProcessor(handler)
+	multiplexedProcessor.RegisterProcessor(logic.ServiceName, tServiceProcessor)
+
+	//here is where the interceptor comes in
+	logInterceptor := &interceptor.LogInterceptor{}
+	logInterceptor.RegisterProcessor(multiplexedProcessor)
+	//instead of using the multiplexedProcessor directly, we use our interceptor as the first argument
+	server := thrift.NewTSimpleServer4(logInterceptor, serverSocket, transportFactory, protocolFactory)
 	err = server.Serve()
 }
