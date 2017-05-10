@@ -55,7 +55,7 @@ func (p *LogInterceptor) Process(in, out thrift.TProtocol) (bool, thrift.TExcept
 	smb := thrift.NewStoredMessageProtocol(in, v[1], typeId, seqid)
 	start := time.Now()
 	rslt, e := actualProcessor.Process(smb, out)
-	end := time.Now()
-	log.Print("method:", v[0], ".", v[1], " has taken ", end.Sub(start).Nanoseconds()/time.Millisecond.Nanoseconds(), " ms")
+	elapsed := time.Since(start)
+	log.Print("method:", v[0], ".", v[1], " has taken ", elapsed.Nanoseconds()/time.Millisecond.Nanoseconds(), " ms")
 	return rslt, e
 }
